@@ -13,7 +13,11 @@ namespace UppsalaApi
         public static void Main(string[] args)
         {
             var host = new WebHostBuilder()
-                .UseKestrel()
+                .UseKestrel(opt=>  
+                {
+                    opt.UseHttps("localhost.pfx", "mmmmmmiiii");
+                })
+                .UseUrls("https://*:44323")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()

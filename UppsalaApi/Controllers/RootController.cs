@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-
+using UppsalaApi.Models;
 
 namespace UppsalaApi.Controllers
 {
@@ -14,10 +14,13 @@ namespace UppsalaApi.Controllers
         [HttpGet(Name =  nameof(GetRoot))]
         public IActionResult GetRoot()
         {
-            var resposne = new
+            // TODO: Consider Refactor to RootResposne
+            var resposne = new RootResource
             {
-                href = Url.Link(nameof(GetRoot), null),
-                rooms = new {href = Url.Link(nameof(RoomsController.GetRooms), null)}
+                Self = Link.To(nameof(GetRoot)),
+                Rooms = Link.To(nameof(RoomsController.GetRoomsAsync)),
+                Info = Link.To(nameof(InfoController.GetInfo))
+
             };
 
             return Ok(resposne);
