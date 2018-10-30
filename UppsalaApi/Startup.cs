@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using UppsalaApi.Models;
 using UppsalaApi.Services;
 using AutoMapper;
+using Newtonsoft.Json;
 
 namespace UppsalaApi
 {
@@ -68,7 +69,16 @@ namespace UppsalaApi
                 var jsonFormatter = opt.OutputFormatters.OfType<JsonOutputFormatter>().Single();
                 opt.OutputFormatters.Remove(jsonFormatter);
                 opt.OutputFormatters.Add(new IonOutputFormatter(jsonFormatter));
-            });
+            })
+             .AddJsonOptions(opt =>
+              {
+                  // These should be the defaults, but we can be explicit:
+                  opt.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                  opt.SerializerSettings.DateFormatHandling = DateFormatHandling.IsoDateFormat;
+                  opt.SerializerSettings.DateParseHandling = DateParseHandling.DateTimeOffset;
+              });
+
+
 
             services.AddRouting(opt=> opt.LowercaseUrls = true);
 
@@ -82,8 +92,19 @@ namespace UppsalaApi
 
             });
 
+
+            services.Configure<CampusOptions>(Configuration);
             services.Configure<CampusInfo>(Configuration.GetSection("Info"));
+            services.Configure<PagingOptions>(Configuration.GetSection("DefaultPagingOptions"));
+
+
             services.AddScoped<IRoomService, DefaultRoomService>();
+            services.AddScoped<IOpeningService, DefaultOpeningService>();
+            services.AddScoped<IBookingService, DefaultBookingService>();
+            services.AddScoped<IDateLogicService, DefaultDateLogicService>();
+            //services.AddScoped<IUserService, DefaultUserService>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -96,9 +117,9 @@ namespace UppsalaApi
             if(env.IsDevelopment())
             {
                 var context = app.ApplicationServices.GetRequiredService<UppsalaApiContext>();
-                AddTestData(context);
+                var dateLogicService = app.ApplicationServices.GetRequiredService<IDateLogicService>();
+                AddTestData(context, dateLogicService);              
             }
-
 
 
             app.UseHsts(opt =>
@@ -108,17 +129,21 @@ namespace UppsalaApi
                 opt.Preload();
             });
             app.UseMvc();
+
+            //TODO: this is not working i need to upgrade the package
+            //app.UseApiVersioning();
+           
         }
 
 
-        private static void AddTestData(UppsalaApiContext context)
+        private static void AddTestData(UppsalaApiContext context, IDateLogicService dateLogicService)
         {
-            context.Rooms.Add(new RoomEntity
+            var roomA300 = context.Rooms.Add(new RoomEntity
             {
                 Id = Guid.Parse("301df04d-8679-4b1b-ab92-0a586ae53d08"),
                 Name = "Lecture Hall A300",
                 Rate = 23959
-            });
+            }).Entity;
 
             context.Rooms.Add(new RoomEntity
             {
@@ -126,6 +151,23 @@ namespace UppsalaApi
                 Name = "Lecture Hall B200",
                 Rate = 10119
             });
+
+
+            var today = DateTimeOffset.Now;
+            var start = dateLogicService.AlignStartTime(today);
+            var end = start.Add(dateLogicService.GetMinimumStay());
+
+            context.Bookings.Add(new BookingEntity
+            {
+                Id = Guid.Parse("2eac8dea-2749-42b3-9d21-8eb2fc0fd6bd"),
+                Room = roomA300,
+                CreatedAt = DateTimeOffset.UtcNow,
+                StartAt = start,
+                EndAt = end,
+                Total = roomA300.Rate,
+            });
+
+
             context.SaveChanges();
         }
     }

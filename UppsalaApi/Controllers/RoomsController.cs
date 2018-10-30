@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using UppsalaApi.Models;
 using UppsalaApi.Services;
 
@@ -18,23 +19,39 @@ namespace UppsalaApi.Controllers
     {
         private readonly IRoomService _roomService;
 
+        private readonly IOpeningService _openingService;
 
-        public RoomsController(IRoomService roomService)
+        private readonly PagingOptions _defaultPagingOptions;
+
+
+        public RoomsController(IRoomService roomService, IOpeningService openingService, IOptions<PagingOptions> defaultPagingOptions)
         {
             _roomService = roomService;
+            _openingService = openingService;
+            _defaultPagingOptions = defaultPagingOptions.Value;
         }
 
         [HttpGet(Name = nameof(GetRoomsAsync))]
-        public async Task<IActionResult> GetRoomsAsync(CancellationToken cancellationToken)
-        {
-            var rooms = await _roomService.GetRoomsAsync(cancellationToken);
 
-            var collectionLink = Link.ToCollection(nameof(GetRoomsAsync));
-            var collection = new Collection<RoomResource>
-            {
-                Self = collectionLink,
-                Value = rooms.ToArray()
-            };
+        public async Task<IActionResult> GetRoomsAsync(
+            [FromQuery] PagingOptions pagingOptions,
+            [FromQuery] SortOptions<RoomResource, RoomEntity> sortOptions,
+            CancellationToken cancellationToken)
+        {
+
+            if (!ModelState.IsValid) return BadRequest(new ApiError(ModelState));
+
+            pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
+            pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
+
+            var rooms = await _roomService.GetRoomsAsync(pagingOptions, sortOptions, cancellationToken);
+
+            var collection = PagedCollection<RoomResource>.Create<RoomsResponse>(
+                Link.ToCollection(nameof(GetRoomsAsync)),
+                rooms.Items.ToArray(),
+                rooms.TotalSize,
+                pagingOptions);
+            collection.Openings = Link.ToCollection(nameof(GetAllRoomOpeningsAsync));
 
             return Ok(collection);
         }
@@ -49,7 +66,30 @@ namespace UppsalaApi.Controllers
 
             return Ok(room);
 
+        }
 
+        // GET /rooms/openings
+        [HttpGet("openings", Name = nameof(GetAllRoomOpeningsAsync))]
+        public async Task<IActionResult> GetAllRoomOpeningsAsync(
+            [FromQuery] PagingOptions pagingOptions,
+            CancellationToken ct)
+        {
+            if (!ModelState.IsValid) return BadRequest(new ApiError(ModelState));
+
+
+            pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
+            pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
+
+            var openings = await _openingService.GetOpeningsAsync(pagingOptions, ct);
+
+            var collection = PagedCollection<OpeningResource>.Create(
+                Link.ToCollection(nameof(GetAllRoomOpeningsAsync)),
+                openings.Items.ToArray(),
+                openings.TotalSize,
+                pagingOptions);
+
+
+            return Ok(collection);
         }
 
 

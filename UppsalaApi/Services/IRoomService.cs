@@ -13,7 +13,9 @@ namespace UppsalaApi.Services
             Guid id, 
             CancellationToken ct);
 
-        Task<IEnumerable<RoomResource>> GetRoomsAsync(
+        Task<PagedResults<RoomResource>> GetRoomsAsync(
+            PagingOptions pagingOptions,
+            SortOptions<RoomResource, RoomEntity> sortOptions,
             CancellationToken ct);
     }
 }

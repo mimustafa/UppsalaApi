@@ -15,6 +15,7 @@ namespace UppsalaApi.Services
     {
 
         private readonly UppsalaApiContext _context;
+    
 
         public DefaultRoomService(UppsalaApiContext context)
         {
@@ -29,11 +30,27 @@ namespace UppsalaApi.Services
             return Mapper.Map<RoomResource>(entity);
         }
 
-        public async Task<IEnumerable<RoomResource>> GetRoomsAsync(CancellationToken cancellationToken)
+        public async Task<PagedResults<RoomResource>> GetRoomsAsync(
+            PagingOptions pagingOptions,
+            SortOptions<RoomResource, RoomEntity> sortOptions,
+            CancellationToken cancellationToken)
         {
-            var query = _context.Rooms.ProjectTo<RoomResource>();
+            IQueryable<RoomEntity> query = _context.Rooms;
+            query = sortOptions.Apply(query);
 
-            return await query.ToArrayAsync();
+            var size = await query.CountAsync(cancellationToken);
+
+            var items = await query
+                .Skip(pagingOptions.Offset.Value)
+                .Take(pagingOptions.Limit.Value)
+                .ProjectTo<RoomResource>()
+                .ToArrayAsync(cancellationToken);
+
+            return new PagedResults<RoomResource>
+            {
+                Items = items,
+                TotalSize = size
+            };
         }
 
     }

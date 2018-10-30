@@ -12,5 +12,7 @@ namespace UppsalaApi
 
         public DbSet<RoomEntity> Rooms { get; set; }
 
+        public DbSet<BookingEntity> Bookings { get; set; }
+
     }
 }
