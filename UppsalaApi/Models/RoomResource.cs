@@ -9,9 +9,11 @@ namespace UppsalaApi.Models
     public class RoomResource : Resource
     {
         [Sortable]
+        [Searchable]
         public string Name { get; set; }
 
         [Sortable(Default = true)]
+        [SearchableDecimal]
         public decimal Rate { get; set; }
     }
 }

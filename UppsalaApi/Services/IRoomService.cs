@@ -16,6 +16,7 @@ namespace UppsalaApi.Services
         Task<PagedResults<RoomResource>> GetRoomsAsync(
             PagingOptions pagingOptions,
             SortOptions<RoomResource, RoomEntity> sortOptions,
+            SearchOptions<RoomResource, RoomEntity> searchOptions,
             CancellationToken ct);
     }
 }

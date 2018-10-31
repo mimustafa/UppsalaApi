@@ -33,9 +33,11 @@ namespace UppsalaApi.Services
         public async Task<PagedResults<RoomResource>> GetRoomsAsync(
             PagingOptions pagingOptions,
             SortOptions<RoomResource, RoomEntity> sortOptions,
+            SearchOptions<RoomResource, RoomEntity> searchOptions,
             CancellationToken cancellationToken)
         {
             IQueryable<RoomEntity> query = _context.Rooms;
+            query = searchOptions.Apply(query);
             query = sortOptions.Apply(query);
 
             var size = await query.CountAsync(cancellationToken);

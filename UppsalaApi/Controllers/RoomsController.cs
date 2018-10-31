@@ -36,6 +36,7 @@ namespace UppsalaApi.Controllers
         public async Task<IActionResult> GetRoomsAsync(
             [FromQuery] PagingOptions pagingOptions,
             [FromQuery] SortOptions<RoomResource, RoomEntity> sortOptions,
+            [FromQuery] SearchOptions<RoomResource, RoomEntity> searchOptions,
             CancellationToken cancellationToken)
         {
 
@@ -44,7 +45,7 @@ namespace UppsalaApi.Controllers
             pagingOptions.Offset = pagingOptions.Offset ?? _defaultPagingOptions.Offset;
             pagingOptions.Limit = pagingOptions.Limit ?? _defaultPagingOptions.Limit;
 
-            var rooms = await _roomService.GetRoomsAsync(pagingOptions, sortOptions, cancellationToken);
+            var rooms = await _roomService.GetRoomsAsync(pagingOptions, sortOptions, searchOptions, cancellationToken);
 
             var collection = PagedCollection<RoomResource>.Create<RoomsResponse>(
                 Link.ToCollection(nameof(GetRoomsAsync)),
