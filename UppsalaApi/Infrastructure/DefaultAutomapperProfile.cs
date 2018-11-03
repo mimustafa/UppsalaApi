@@ -22,7 +22,7 @@ namespace UppsalaApi.Infrastructure
                     .ForMember(dest => dest.Room, opt => opt.MapFrom(src =>
                         Link.To(nameof(Controllers.RoomsController.GetRoomByIdAsync), new { roomId = src.RoomId })));
 
-            CreateMap<BookingEntity, BookingResoure>()
+            CreateMap<BookingEntity, BookingResource>()
                 .ForMember(dest => dest.Total, opt => opt.MapFrom(src => src.Total / 100m))
                 .ForMember(dest => dest.Self, opt => opt.MapFrom(src =>
                     Link.To(

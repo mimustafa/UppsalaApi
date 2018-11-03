@@ -21,12 +21,11 @@ namespace UppsalaApi.Filters
             _urlHelperFactory = urlHelperFactory;
         }
 
-
         public async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
             var asObjectResult = context.Result as ObjectResult;
 
-            var shouldSkip = asObjectResult?.Value == null || asObjectResult.StatusCode != (int)HttpStatusCode.OK;
+            bool shouldSkip = asObjectResult?.Value == null || asObjectResult.StatusCode != (int)HttpStatusCode.OK;
             if (shouldSkip)
             {
                 await next();
@@ -39,7 +38,6 @@ namespace UppsalaApi.Filters
             await next();
         }
 
-
         private static void RewriteAllLinks(object model, LinkRewriter rewriter)
         {
             if (model == null) return;
@@ -51,7 +49,7 @@ namespace UppsalaApi.Filters
                 .ToArray();
 
             var linkProperties = allProperties
-                .Where(p => p.CanWrite && typeof(Link).IsAssignableFrom(p.PropertyType));
+                .Where(p => p.CanWrite && p.PropertyType == typeof(Link));
 
             foreach (var linkProperty in linkProperties)
             {
@@ -80,8 +78,6 @@ namespace UppsalaApi.Filters
         }
 
 
-
-
         private static void RewriteLinksInNestedObjects(
            IEnumerable<PropertyInfo> objectProperties,
            object obj,
@@ -89,8 +85,10 @@ namespace UppsalaApi.Filters
         {
             foreach (var objectProperty in objectProperties)
             {
-                var shouldSkip = objectProperty.PropertyType == typeof(string);
-                if (shouldSkip) continue;
+                if (objectProperty.PropertyType == typeof(string))
+                {
+                    continue;
+                }
 
                 var typeInfo = objectProperty.PropertyType.GetTypeInfo();
                 if (typeInfo.IsClass)
@@ -99,7 +97,6 @@ namespace UppsalaApi.Filters
                 }
             }
         }
-
 
 
         private static void RewriteLinksInArrays(
@@ -117,8 +114,6 @@ namespace UppsalaApi.Filters
                 }
             }
         }
-
-
 
     }
 }

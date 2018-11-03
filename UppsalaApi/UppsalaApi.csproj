@@ -24,6 +24,14 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="1.1.1" />
     <PackageReference Include="AutoMapper" Version="6.0.2" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="2.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="1.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="1.1.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.3.0" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="1.0.0-rc3-final" />
+    <PackageReference Include="OpenIddict.Mvc" Version="1.0.0-rc3-final" />
+    <PackageReference Include="OpenIddict" Version="1.0.0-rc3-final" />
+    <PackageReference Include="AspNet.Security.OAuth.Validation" Version="1.1.0-preview-final" />
+    <PackageReference Include="Microsoft.AspNetCore.ResponseCaching" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(NoTools)' != 'True'">

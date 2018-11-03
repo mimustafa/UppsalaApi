@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 namespace UppsalaApi.Infrastructure
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class SortableAttribute : Attribute
+    public class SearchableStringAttribute : SearchableAttribute
     {
-
-        public string EntityProperty { get; set; }
-
-        public bool Default { get; set; }
+        public SearchableStringAttribute()
+        {
+            ExpressionProvider = new StringSearchExpressionProvider();
+        }
     }
 }
-

@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using UppsalaApi.Infrastructure;
 using UppsalaApi.Models;
 
 namespace UppsalaApi.Controllers
@@ -12,20 +13,28 @@ namespace UppsalaApi.Controllers
     public class RootController : Controller
     {
         [HttpGet(Name =  nameof(GetRoot))]
+        [ResponseCache(CacheProfileName = "Static")]
+        [Etag]
         public IActionResult GetRoot()
-        {
-            // TODO: Consider Refactor to RootResposne
-            var resposne = new RootResource
+        {         
+            var response = new RootResponse
             {
                 Self = Link.To(nameof(GetRoot)),
-                Rooms = Link.To(nameof(RoomsController.GetRoomsAsync)),
-                Info = Link.To(nameof(InfoController.GetInfo))
-
+                Rooms = Link.ToCollection(nameof(RoomsController.GetRoomsAsync)),
+                Info = Link.To(nameof(InfoController.GetInfo)),
+                Users = Link.ToCollection(nameof(UsersController.GetVisibleUsersAsync)),
+                Token = FormMetadata.FromModel(
+                    new PasswordGrantForm(),
+                    Link.ToForm(nameof(TokenController.TokenExchangeAsync),
+                                null, relations: Form.Relation))
             };
 
-            return Ok(resposne);
+            if (!Request.GetEtagHandler().NoneMatch(response))
+            {
+                return StatusCode(304, response);
+            }
 
+            return Ok(response);
         }
- 
     }
 }

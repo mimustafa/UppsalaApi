@@ -25,25 +25,22 @@ namespace UppsalaApi.Models
                 RouteName = routeName,
                 RouteValues = routeValues,
                 Method = GetMethod,
-                //Relations = new string[] { Collection<Link>.CollectionRelation }
                 Relations = new string[] { "collection" }
 
             };
 
-        //public static Link ToForm(
-            //string routeName,
-            //object routeValues = null,
-            //string method = PostMethod,
-            //params string[] relations)
-            //=> new Link
-            //{
-            //    RouteName = routeName,
-            //    RouteValues = routeValues,
-            //    Method = method,
-            //    Relations = relations
-            //};
-
-
+        public static Link ToForm(
+            string routeName,
+            object routeValues = null,
+            string method = PostMethod,
+            params string[] relations)
+            => new Link
+            {
+                RouteName = routeName,
+                RouteValues = routeValues,
+                Method = method,
+                Relations = relations
+            };
 
 
         [JsonProperty(Order = -4)]

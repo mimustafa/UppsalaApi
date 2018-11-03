@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using UppsalaApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -22,11 +23,41 @@ namespace UppsalaApi.Services
 
         public async Task<PagedResults<OpeningResource>> GetOpeningsAsync(
             PagingOptions pagingOptions,
+            SortOptions<OpeningResource, OpeningEntity> sortOptions,
+            SearchOptions<OpeningResource, OpeningEntity> searchOptions,
             CancellationToken ct)
         {
             var rooms = await _context.Rooms.ToArrayAsync();
 
-            var allOpenings = new List<OpeningResource>();
+            return await GetOpeningsForRoomsAsync(
+                  rooms, pagingOptions, sortOptions, searchOptions, ct);
+        }
+
+
+
+        public async Task<PagedResults<OpeningResource>> GetOpeningsByRoomIdAsync(
+            Guid roomId,
+            PagingOptions pagingOptions,
+            SortOptions<OpeningResource, OpeningEntity> sortOptions,
+            SearchOptions<OpeningResource, OpeningEntity> searchOptions,
+            CancellationToken ct)
+        {
+            var room = await _context.Rooms.SingleOrDefaultAsync(r => r.Id == roomId, ct);
+            if (room == null) throw new ArgumentException("Invalid room id.");
+
+            return await GetOpeningsForRoomsAsync(
+                new[] { room }, pagingOptions, sortOptions, searchOptions, ct);
+        }
+
+
+        private async Task<PagedResults<OpeningResource>> GetOpeningsForRoomsAsync(
+            RoomEntity[] rooms,
+            PagingOptions pagingOptions,
+            SortOptions<OpeningResource, OpeningEntity> sortOptions,
+            SearchOptions<OpeningResource, OpeningEntity> searchOptions,
+            CancellationToken ct)
+        {
+            var allOpenings = new List<OpeningEntity>();
 
             foreach (var room in rooms)
             {
@@ -51,19 +82,27 @@ namespace UppsalaApi.Services
                         Rate = room.Rate,
                         StartAt = slot.StartAt,
                         EndAt = slot.EndAt
-                    })
-                    .Select(model => Mapper.Map<OpeningResource>(model));
+                    });
 
                 allOpenings.AddRange(openings);
             }
 
-            var pagedOpenings = allOpenings
-                .Skip(pagingOptions.Offset.Value)
-                .Take(pagingOptions.Limit.Value);
+            var pseudoQuery = allOpenings.AsQueryable();
+            pseudoQuery = searchOptions.Apply(pseudoQuery);
+            pseudoQuery = sortOptions.Apply(pseudoQuery);
 
-            return new PagedResults<OpeningResource> {
-                Items = pagedOpenings,
-                TotalSize = allOpenings.Count
+            var size = pseudoQuery.Count();
+
+            var items = pseudoQuery
+                .Skip(pagingOptions.Offset.Value)
+                .Take(pagingOptions.Limit.Value)
+                .ProjectTo<OpeningResource>()
+                .ToArray();
+
+            return new PagedResults<OpeningResource>
+            {
+                TotalSize = size,
+                Items = items
             };
         }
 
@@ -79,5 +118,6 @@ namespace UppsalaApi.Services
                 .SelectMany(existing => _dateLogicService.GetAllSlots(existing.StartAt, existing.EndAt))
                 .ToArrayAsync(ct);
         }
+
     }
 }

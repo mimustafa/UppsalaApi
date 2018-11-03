@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 namespace UppsalaApi
 {
-    public static class TypeInfoExtensions
+    public static class TypeInfoMemberExtensions
     {
         public static IEnumerable<ConstructorInfo> GetAllConstructors(this TypeInfo typeInfo)
             => typeInfo.GetAll(ti => ti.DeclaredConstructors);

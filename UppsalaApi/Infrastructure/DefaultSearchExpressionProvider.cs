@@ -8,18 +8,28 @@ namespace UppsalaApi.Infrastructure
 {
     public class DefaultSearchExpressionProvider : ISearchExpressionProvider
     {
-        public virtual Expression GetComparison(
-            MemberExpression left,
-            string op,
-            ConstantExpression right)
-        {
-            if (!op.Equals("eq", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException($"Invalid operator '{op}'.");
+        protected const string EqualsOperator = "eq";
 
-            return Expression.Equal(left, right);
+        public virtual IEnumerable<string> GetOperators()
+        {
+            yield return EqualsOperator;
+        }
+
+
+        public virtual Expression GetComparison(
+           MemberExpression left,
+           string op,
+           ConstantExpression right)
+        {
+            switch (op.ToLower())
+            {
+                case EqualsOperator: return Expression.Equal(left, right);
+                default: throw new ArgumentException($"Invalid operator '{op}'.");
+            }
         }
 
         public virtual ConstantExpression GetValue(string input)
             => Expression.Constant(input);
+
     }
 }

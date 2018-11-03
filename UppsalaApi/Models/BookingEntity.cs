@@ -11,6 +11,8 @@ namespace UppsalaApi.Models
 
         public RoomEntity Room { get; set; }
 
+        public UserEntity User { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset ModifiedAt { get; set; }
